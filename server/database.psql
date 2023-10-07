@@ -1,0 +1,20 @@
+CREATE TABLE admin_student_card_table (
+    student_card_id SERIAL PRIMARY KEY,
+    student_rollno INT,
+    student_fullname VARCHAR(255),
+    student_report_card_id INT,
+    FOREIGN KEY (student_report_card_id) REFERENCES report_card_table(report_card_id)
+);
+
+CREATE TABLE report_card_table (
+    report_card_id SERIAL PRIMARY KEY,
+    student_fullname VARCHAR(255),
+    student_email VARCHAR(255),
+    student_rollno INT,
+    student_phone VARCHAR(20),
+    subject VARCHAR(255),
+    test_taking_date DATE,
+    full_marks INT,
+    marks_obtained INT,
+    overall_percentage DECIMAL(5, 2) -- Assuming 5 total digits with 2 decimal places
+);
