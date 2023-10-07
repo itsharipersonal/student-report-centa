@@ -19,8 +19,6 @@ const Signup = () => {
     method: "post",
     body: {
       email,
-      rollno,
-      fullname,
     },
     onSuccess: async (data) => {
       const { rollno } = data;
@@ -55,24 +53,7 @@ const Signup = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="flex flex-col my-3">
-          <label className="font-medium">Enter your FullName</label>
-          <input
-            type="text"
-            className="border-gray-300 border-2 rounded-lg h-14 px-5 text-black"
-            value={fullname}
-            onChange={(e) => setFullname(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col my-3">
-          <label className="font-medium">Enter your RollNo</label>
-          <input
-            type="text"
-            className="border-gray-300 border-2 rounded-lg h-14 px-5 text-black"
-            value={rollno}
-            onChange={(e) => setRollno(e.target.value)}
-          />
-        </div>
+
         <div className="flex justify-center">
           <ReCAPTCHA
             sitekey="6LfNEHkoAAAAAC7k82JBrbmJuL8MteR50uM74wBg"
@@ -86,11 +67,6 @@ const Signup = () => {
         >
           SignUp
         </button>
-        <div className="flex justify-center">
-          <span>
-            Already have an account? <a href="/auth/signin">Sign In</a>
-          </span>
-        </div>
       </form>
 
       {/* Render the OTP verification modal if showModal is true */}

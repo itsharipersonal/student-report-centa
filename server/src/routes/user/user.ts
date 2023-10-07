@@ -4,30 +4,19 @@ import { body } from "express-validator";
 import { validateRequest } from "@hkticket/common";
 
 import { userControllers } from "../../controllers/user-controllers/user-controllers";
-import { checkSession } from "../../middleware/verifyAuth";
+import { currentStudent } from "../../middleware/currentStudent";
 
 const router = express.Router();
 
 router.post(
   "/users/signup",
-  [
-    body("email").isEmail().withMessage("Email must be valid"),
-    body("rollno")
-      .isNumeric()
-      .isLength({ min: 6, max: 6 })
-      .withMessage("RollNo must be a 6-digit number"),
-    body("fullname")
-      .isString()
-      .isLength({ min: 4, max: 30 })
-      .withMessage("Fullname must be between 4 and 30 characters"),
-  ],
+  [body("email").isEmail().withMessage("Email must be valid")],
   validateRequest,
   userControllers.signup
 );
 
 router.post(
   "/users/verify",
-  checkSession,
   [
     body("otp")
       .isNumeric()
@@ -37,7 +26,11 @@ router.post(
   validateRequest,
   userControllers.verify
 );
-
+router.get(
+  "/users/currentstudent/",currentStudent,
+  userControllers.currentStudent
+);
 router.post("/users/signout", userControllers.signout);
+router.post("/users/viewfiles",userControllers.viewfiles)
 
 export { router as userRouter };

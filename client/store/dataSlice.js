@@ -2,19 +2,20 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const sessionSlice = createSlice({
-  name: "user",
+  name: "data",
   initialState: {
-    user: null, // You can store user data or authentication state here
+    data: null, // You can store user data or authentication state here
   },
   reducers: {
-    setRollno: (state, action) => {
+    setData: (state, action) => {
+      console.log(action);
       state.user = action.payload;
     },
-    clearRollno: (state) => {
+    clearData: (state) => {
       state.user = null;
     },
   },
 });
 
-export const { setRollno, clearRollno } = sessionSlice.actions;
+export const { setUser, clearUser } = sessionSlice.actions;
 export default sessionSlice.reducer;

@@ -5,24 +5,25 @@ import { generateOTP } from "../../utils/otp-genarator";
 import * as schedule from "node-schedule";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import { currentStudent } from "../../middleware/currentStudent";
 
 const userControllers = {
   signup: async (req: Request, res: Response) => {
-    const { email, rollno, fullname } = req.body;
+    const { email } = req.body;
 
     try {
       // Check if the user already exists in the database
       const existingUser = await client.query(
-        "SELECT * FROM  admin_student_table WHERE rollno = $1",
-        [rollno]
+        "SELECT * FROM students_table WHERE email = $1",
+        [email]
       );
 
       const user = existingUser.rows[0];
 
       if (!user) {
-        throw new Error("Student with this roll number not exists");
+        throw new Error("Student with this Email not exists");
       }
-      console.log(user);
+      console.log(user, "user is avilable");
 
       const otp: number = generateOTP();
       console.log(`Generated OTP: ${otp} ${typeof otp}`);
@@ -58,32 +59,21 @@ const userControllers = {
           console.log("Email sent: " + info.response);
         }
       });
-      //BEFORE SENDING OTP I WANT TO CONFIRM NO OTPS ATTCHED TO THIS ROLLNO
-      const deleteQuery =
-        "DELETE FROM student_otp_table WHERE student_rollno = $1";
-      const deleted = await client.query(deleteQuery, [rollno]);
-      console.log("deleted", deleted);
-      //INSERTING
-      const insertQuery =
-        "INSERT INTO student_otp_table (student_rollno, otp) VALUES ($1, $2) RETURNING *";
-      // Execute the query to insert data
-      client.query(insertQuery, [rollno, otp]);
+      //Otp saving in session
+      req.session!.otp = otp;
+      req.session!.email = email;
 
       // Define a function to delete old OTP records
       async function deleteOldOTPRecords() {
         try {
-          const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes ago
-
-          // Execute the SQL query to delete old OTP records
-          const query = "DELETE FROM student_otp_table WHERE created_at < $1";
-          const result = await client.query(query, [twoMinutesAgo]);
-
-          console.log(`Deleted ${result.rowCount} old OTP records`);
+          const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes age
+          //Deleting session
+          req.session!.otp = null;
+          console.log(`Deleted ${req.session!.otp} old OTP records`);
         } catch (error) {
           console.error("Error deleting old OTP records:", error);
         }
       }
-
       // Schedule the task to run every minute (adjust as needed)
       const job = schedule.scheduleJob("* * * * *", deleteOldOTPRecords);
 
@@ -101,34 +91,18 @@ const userControllers = {
   },
 
   verify: async (req: Request, res: Response) => {
-    console.log(req.body);
-
     try {
-      const { otp, rollno } = req.body;
-
-      // Convert the input OTP to a number
-      const inputOtp = parseInt(otp);
-
-      //fetching otp from psql with rollno from client
-      const selectQuery =
-        "SELECT * FROM student_otp_table WHERE student_rollno = $1";
-      const otpFetch = await client.query(selectQuery, [rollno]);
-
-      const serverOtp = otpFetch.rows[0];
-      const otpOrg = parseInt(serverOtp.otp);
-      console.log(otpOrg);
-
-      if (inputOtp !== otpOrg) {
-        throw new BadRequestError("OTP is not valid");
-      } else {
-        console.log("matches");
-        const deleteQuery =
-          "DELETE FROM student_otp_table WHERE student_rollno = $1";
-        const deleted = await client.query(deleteQuery, [rollno]);
-        console.log("deleted", deleted);
+      const { otp } = req.body;
+      if (!otp == req.session?.otp) {
+        throw new BadRequestError("otp didnt match");
       }
-      const user = { rollno };
-      res.status(200).json({ user });
+      req.session!.otp = null;
+      req.session!.user = req.session!.email;
+      req.session!.email = null;
+      console.log(req.session!.user);
+      const user = req.session!.user;
+
+      res.send({ user });
     } catch (error: any) {
       console.error(error);
       throw new BadRequestError(
@@ -136,12 +110,55 @@ const userControllers = {
       );
     }
   },
-
+  currentStudent: (req: Request, res: Response) => {
+    res.send({ currentStudent: req.session!.user || null });
+  },
   signout: (req: Request, res: Response) => {
     req.session!.studentSession = null;
     console.log("session", req.session);
 
     res.send({});
+  },
+  viewfiles: async (req: Request, res: Response) => {
+    const { isAuth } = req.body;
+    console.log(req.body);
+    try {
+      const fetchVerifiedUserDataQuery = `
+        SELECT
+            students_table.student_id,
+            students_table.name,
+            students_table.email,
+            student_report_card_table.id,
+            student_report_card_table.subject,
+            student_report_card_table.phone,
+            student_report_card_table.test_taking_date,
+            student_report_card_table.full_marks,
+            student_report_card_table.mark_obtained,
+            student_report_card_table.overall_percentage
+        FROM
+            students_table
+        INNER JOIN
+            student_report_card_table
+        ON
+            students_table.email = student_report_card_table.email
+        WHERE
+            students_table.email = $1;
+      `;
+
+      const result = await client.query(fetchVerifiedUserDataQuery, [isAuth]);
+
+      if (result.rows.length > 0) {
+        console.log(
+          "Verified User Data and Report Card Data (by email match):"
+        );
+        console.table(result.rows[0]);
+        res.send(result.rows[0]);
+      } else {
+        console.log(`No verified data found for email: ${isAuth}`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
   },
 };
 

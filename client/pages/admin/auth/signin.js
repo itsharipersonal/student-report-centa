@@ -60,9 +60,6 @@ export default () => {
         <button className=" bg-orange-500 text-white h-14 w-full rounded-full my-3 hover:bg-orange-400 transition duration-300 ease-in-out">
           SignIn
         </button>
-        <div className="flex justify-center">
-          <span>Don't have an account? <a href="/auth/admin/signup">Sign up</a></span>
-        </div>
       </form>
     </div>
   );

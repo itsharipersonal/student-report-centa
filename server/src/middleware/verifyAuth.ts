@@ -7,7 +7,7 @@ export const checkSession = (
   res: Response,
   next: NextFunction
 ) => {
-  if (!req.session?.otp) {
+  if (!req.session?.user) {
     throw new NotAuthorizedError();
   }
   next(); // Continue to the next middleware or route handler

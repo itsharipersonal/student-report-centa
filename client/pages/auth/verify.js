@@ -31,13 +31,10 @@ const OtpVerificationModal = ({ rollno, onClose }) => {
       rollno,
     },
     onSuccess: (data) => {
-      console.log("Data received:", data);
-      const { user } = data; // Access the 'user' property
-      const { rollno } = user; // Access the 'rollno' property within 'user'
-      console.log("Rollno:", rollno);
+      const {user} = data
       Router.push({
         pathname: "/",
-        query: { rollno },
+        query: { user },
       });
     },
   });
@@ -55,7 +52,9 @@ const OtpVerificationModal = ({ rollno, onClose }) => {
           style={{ objectFit: "contain" }}
           animationData={animationData}
         />
-        <h1 className="text-2xl font-bold my-3 text-center text-black">Otp verification</h1>
+        <h1 className="text-2xl font-bold my-3 text-center text-black">
+          Otp verification
+        </h1>
         <p className=" text-black text-center">
           Time remaining: {Math.floor(countdown / 60)}:
           {countdown % 60 < 10 ? "0" : ""}
@@ -71,7 +70,7 @@ const OtpVerificationModal = ({ rollno, onClose }) => {
               onChange={(e) => setOtp(e.target.value)}
             />
           </div>
-          {errors}
+          <div className=" text-black">{errors}</div>
           <button className="bg-blue-600 text-white h-14 w-full rounded-full my-3 hover:bg-blue-400 transition duration-300 ease-in-out">
             Verify Otp
           </button>
