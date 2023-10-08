@@ -33,11 +33,26 @@ const StudentReportCard = ({}) => {
       });
   }, []);
 
-  const PrintButton = () => {
-    const handlePrint = () => {
-      window.print();
+  const handleDownloadPDF = async () => {
+    try {
+      setLoader(true);
+
+      // Capture the component as an image using html2canvas
+      const canvas = await html2canvas(reportCardRef.current);
+      const imageData = canvas.toDataURL("image/png");
+
+      // Create a PDF document
+      const doc = new jsPDF();
+      doc.addImage(imageData, "PNG", 10, 10, 190, 0);
+
+      // Save the PDF as a file
+      doc.save("student_report_card.pdf");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setLoader(false);
     }
-  }
+  };
   
 
   const {
@@ -114,7 +129,7 @@ const StudentReportCard = ({}) => {
         </div>
         <p className=" text-black text-center mt-4"></p>
         <div className=" text-center mt-4">
-        <button onClick={PrintButton}>Download PDF</button>
+        <button onClick={handleDownloadPDF}>Download PDF</button>
         </div>
       </div>
     </div>
